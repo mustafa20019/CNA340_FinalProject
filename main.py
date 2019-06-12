@@ -38,7 +38,7 @@ def root():
         # Show all items
         #cur.execute('SELECT productId, name, price, description, image, stock FROM products LIMIT 1')
         item_data = cur.fetchall()
-        # Show an error instead of the categories
+        # Show an error instead of the categories   
         category_data = [(-1,"Error")]
         # Show all categories
         cur.execute('SELECT categoryId, name FROM categories')
