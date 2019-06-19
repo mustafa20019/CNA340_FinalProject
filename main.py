@@ -34,9 +34,9 @@ def root():
     with sqlite3.connect('database.db') as conn:
         cur = conn.cursor()
         # Show last product added
-        cur.execute('SELECT productId, name, price, description, image, stock FROM products ORDER BY productId DESC LIMIT 3 ')
+        cur.execute('SELECT productId, name, price, description, image, stock FROM products ORDER BY productId DESC LIMIT 1 ')
         # Show all items
-        #cur.execute('SELECT productId, name, price, description, image, stock FROM products LIMIT 1')
+        cur.execute('SELECT productId, name, price, description, image, stock FROM products UNLIMIT ')
         item_data = cur.fetchall()
         # Show an error instead of the categories
         category_data = [(-1,"Error")]
@@ -54,6 +54,34 @@ def admin():
         categories = cur.fetchall()
     conn.close()
     return render_template('add.html', categories=categories)
+
+@app.route("/addItem", methods=["GET", "POST"])
+def addItem():
+    if request.method == "POST":
+        name = request.form['name']
+        price = float(request.form['price'])
+        description = request.form['description']
+        stock = int(request.form['stock'])
+        categoryId = int(request.form['category'])
+
+        #Upload image
+        image = request.files['image']
+        if image and allowed_file(image.filename):
+            filename = secure_filename(image.filename)
+            image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        imagename = filename
+        with sqlite3.connect('database.db') as conn:
+            try:
+                cur = conn.cursor()
+                cur.execute('''INSERT INTO products (name, price, description, image, stock, categoryId) VALUES (?, ?, ?, ?, ?, ?)''', (name, price, description, imagename, stock, categoryId))
+                conn.commit()
+                msg="Added successfully"
+            except:
+                msg="Error occured"
+                conn.rollback()
+        conn.close()
+        print(msg)
+        return redirect(url_for('root'))
 
 @app.route("/displayCategory")
 def displayCategory():
@@ -148,10 +176,10 @@ def update_profile():
 @app.route("/loginForm")
 def login_form():
     # Uncomment to enable logging in and registration
-    if 'email' in session:
+    #if 'email' in session:
         return redirect(url_for('root'))
-    else:
-        return render_template('login.html', error='')
+    #else:
+    #    return render_template('login.html', error='')
 
 @app.route("/login", methods = ['POST', 'GET'])
 def login():
@@ -329,3 +357,4 @@ def parse(data):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
